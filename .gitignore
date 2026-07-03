@@ -1,0 +1,102 @@
+# ============================
+# Dependencies
+# ============================
+**/node_modules/
+**/.pnp
+**/.pnp.js
+
+# ============================
+# Build Outputs
+# ============================
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+**/.output/
+**/coverage/
+**/out/
+**/.vercel/
+
+# ============================
+# Environment Files
+# ============================
+**/.env
+**/.env.*
+!**/.env.example
+
+# ============================
+# Logs
+# ============================
+**/*.log
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================
+# Cache
+# ============================
+**/.cache/
+**/.parcel-cache/
+**/.turbo/
+**/.vite/
+**/.eslintcache
+
+# ============================
+# TypeScript
+# ============================
+**/*.tsbuildinfo
+
+# ============================
+# IDE & Editor
+# ============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.code-workspace
+
+# ============================
+# OS Files
+# ============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================
+# Temporary Files
+# ============================
+*.tmp
+*.temp
+
+# ============================
+# Package Managers
+# ============================
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# Uncomment ONE of the above lock files if you
+# want to keep it in Git (recommended).
+
+# ============================
+# Prisma
+# ============================
+**/prisma/dev.db
+**/prisma/*.db
+**/prisma/*.db-journal
+
+# ============================
+# Testing
+# ============================
+**/.nyc_output/
+**/playwright-report/
+**/test-results/
+
+# ============================
+# Misc
+# ============================
+**/.history/
+**/.sass-cache/
+**/.firebase/

@@ -1,0 +1,24 @@
+import { createContext, useContext, useEffect, useState } from 'react'
+
+const ThemeContext = createContext(null)
+
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const cycle = () => {
+    setTheme((t) => (t === 'light' ? 'medium' : t === 'medium' ? 'dark' : 'light'))
+  }
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, cycle }}>
+      {children}
+    </ThemeContext.Provider>
+  )
+}
+
+export const useTheme = () => useContext(ThemeContext)

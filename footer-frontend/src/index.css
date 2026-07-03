@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============ THEME TOKENS ============
+   Matches client frontend exactly:
+   light / medium (stone-grey) / dark */
+
+:root[data-theme="light"] {
+  --bg:        #ffffff;
+  --surface:   #f4f4f3;
+  --surface-2: #e9e8e6;
+  --ink:       #121212;
+  --muted:     #6f6f6c;
+  --line:      #dcdad6;
+  --accent:    #121212;
+}
+
+:root[data-theme="medium"] {
+  --bg:        #c9c7c2;
+  --surface:   #bdbab4;
+  --surface-2: #afaca5;
+  --ink:       #161513;
+  --muted:     #4d4b47;
+  --line:      #9c9990;
+  --accent:    #161513;
+}
+
+:root[data-theme="dark"] {
+  --bg:        #0c0c0b;
+  --surface:   #161615;
+  --surface-2: #1f1f1d;
+  --ink:       #f3f2ef;
+  --muted:     #97958f;
+  --line:      #2c2b28;
+  --accent:    #f3f2ef;
+}
+
+* { border-color: var(--line); }
+
+html, body {
+  background: var(--bg);
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: var(--ink);
+  font-family: 'Fraunces', serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .35s ease, color .35s ease;
+}
+
+/* Override body font for prose to a clean sans-like feel via Fraunces light */
+.prose-body {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+}
+
+::selection { background: var(--ink); color: var(--bg); }
+
+.hr { border-top: 1px solid var(--line); }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 1.5px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+::-webkit-scrollbar       { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 0; }
+
+/* Eyebrow label — matches client frontend exactly */
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+/* Policy / info page prose */
+.policy-prose p {
+  line-height: 1.85;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+  font-weight: 300;
+  font-size: 0.9375rem;
+}
+
+.policy-prose h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.policy-prose h3 {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}

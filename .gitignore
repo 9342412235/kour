@@ -73,12 +73,10 @@ desktop.ini
 # ============================
 # Package Managers
 # ============================
-**/package-lock.json
+# package-lock.json is intentionally kept in Git
+# so Render and Vercel get reproducible installs.
 **/yarn.lock
 **/pnpm-lock.yaml
-
-# Uncomment ONE of the above lock files if you
-# want to keep it in Git (recommended).
 
 # ============================
 # Prisma

@@ -7,13 +7,16 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const UPLOADS_ROOT = path.join(__dirname, '../../uploads');
 
-const AVATARS_DIR = path.join(UPLOADS_ROOT, 'avatars');
-const BLOG_DIR   = path.join(UPLOADS_ROOT, 'blog');
-const HERO_DIR   = path.join(UPLOADS_ROOT, 'hero');
-for (const dir of [AVATARS_DIR, BLOG_DIR, HERO_DIR]) {
-  fs.mkdirSync(dir, { recursive: true });
-}
+const AVATARS_DIR = path.join(UPLOADS_ROOT, "avatars");
+const BLOG_DIR = path.join(UPLOADS_ROOT, "blog");
+const HERO_DIR = path.join(UPLOADS_ROOT, "hero");
 
+// Create upload directories only when not running on Vercel
+if (!process.env.VERCEL) {
+  for (const dir of [AVATARS_DIR, BLOG_DIR, HERO_DIR]) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
 function imageFileFilter(req, file, cb) {
   if (!file.mimetype.startsWith('image/')) {
     return cb(new Error('Only image files are allowed'));

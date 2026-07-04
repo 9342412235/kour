@@ -15,7 +15,6 @@ export const BACKUP_DIR = path.join(__dirname, '../../backups');
  * it to disk. Returns { fileName, filePath, ordersCount, productsCount }.
  */
 export async function runBackup({ triggeredBy = 'auto' } = {}) {
-
   // Disable backups on Vercel
   if (process.env.VERCEL) {
     return {
@@ -26,7 +25,6 @@ export async function runBackup({ triggeredBy = 'auto' } = {}) {
     };
   }
 
-export async function runBackup({ triggeredBy = 'auto' } = {}) {
   const ordersRes = await query(
     `SELECT o.order_number, u.name AS customer_name, u.email AS customer_email,
             o.status, o.payment_status, o.subtotal, o.shipping_fee, o.tax_amount,
@@ -132,5 +130,4 @@ export async function runScheduledBackup() {
       // best-effort only
     }
   }
-}
 }

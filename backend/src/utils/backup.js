@@ -8,12 +8,24 @@ import { sendNotificationEmail } from './mailer.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const BACKUP_DIR = path.join(__dirname, '../../backups');
 
-if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+// if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
 /**
  * Builds an .xlsx workbook with two sheets — Orders and Stock — and saves
  * it to disk. Returns { fileName, filePath, ordersCount, productsCount }.
  */
+export async function runBackup({ triggeredBy = 'auto' } = {}) {
+
+  // Disable backups on Vercel
+  if (process.env.VERCEL) {
+    return {
+      fileName: null,
+      filePath: null,
+      ordersCount: 0,
+      productsCount: 0,
+    };
+  }
+
 export async function runBackup({ triggeredBy = 'auto' } = {}) {
   const ordersRes = await query(
     `SELECT o.order_number, u.name AS customer_name, u.email AS customer_email,
@@ -94,13 +106,17 @@ async function enforceRetention() {
 // every 24 hours). On failure, emails the configured notification
 // addresses instead of failing silently.
 export async function runScheduledBackup() {
+
+  // Skip backups on Vercel
+  if (process.env.VERCEL) {
+    return;
+  }
+
   try {
     const result = await runBackup({ triggeredBy: 'auto' });
-    // eslint-disable-next-line no-console
     console.log(`[backup] Automatic backup complete: ${result.fileName} (${result.ordersCount} orders, ${result.productsCount} products)`);
     return result;
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[backup] Automatic backup failed:', err.message);
     await query(
       `INSERT INTO backup_runs (triggered_by, file_name, status, error) VALUES ('auto','(failed)','failed',$1)`,
@@ -116,4 +132,5 @@ export async function runScheduledBackup() {
       // best-effort only
     }
   }
+}
 }

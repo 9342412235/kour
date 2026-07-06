@@ -26,6 +26,8 @@ function serializeOrder(row, items = [], address = null) {
     taxAmount: Number(row.tax_amount || 0),
     total: Number(row.total),
     createdAt: row.created_at,
+    couponCode: row.coupon_code || null,
+    discountAmount: Number(row.discount_amount || 0),
     shippingAddress: address ? {
       id: address.id,
       label: address.label,
@@ -68,7 +70,7 @@ router.get('/tax-rate', asyncHandler(async (req, res) => {
 
 // Checkout: convert current cart into an order
 router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
-  const { addressId, notes, paymentMethod } = req.body;
+  const { addressId, notes, paymentMethod, couponCode } = req.body;
   const validPaymentMethods = ['cod', 'card', 'upi'];
   const method = validPaymentMethods.includes(paymentMethod) ? paymentMethod : 'cod';
 
@@ -113,23 +115,103 @@ router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
     const subtotal = cartRes.rows.reduce((sum, i) => sum + Number(i.current_price) * i.qty, 0);
     const shippingFee = 0; // free shipping storewide, per storefront promo
 
+    // Validate Coupon if provided
+    let discountApplied = 0;
+    let coupon = null;
+    if (couponCode) {
+      const codeUpper = couponCode.trim().toUpperCase();
+      const couponRes = await client.query(
+        'SELECT * FROM coupons WHERE code = $1',
+        [codeUpper]
+      );
+      coupon = couponRes.rows[0];
+      if (!coupon) {
+        const err = new Error('Invalid coupon code');
+        err.status = 400;
+        throw err;
+      }
+
+      if (coupon.status !== 'active') {
+        const err = new Error('Coupon is inactive');
+        err.status = 400;
+        throw err;
+      }
+
+      const now = new Date();
+      if (coupon.start_date && new Date(coupon.start_date) > now) {
+        const err = new Error('Coupon is not active yet');
+        err.status = 400;
+        throw err;
+      }
+      if (coupon.expiry_date && new Date(coupon.expiry_date) < now) {
+        const err = new Error('Coupon has expired');
+        err.status = 400;
+        throw err;
+      }
+
+      if (coupon.min_purchase && subtotal < Number(coupon.min_purchase)) {
+        const err = new Error(`Minimum purchase amount of $${parseFloat(coupon.min_purchase).toFixed(2)} is required`);
+        err.status = 400;
+        throw err;
+      }
+
+      if (coupon.usage_limit) {
+        const usageCountRes = await client.query(
+          'SELECT COUNT(*) FROM coupon_usages WHERE coupon_id = $1',
+          [coupon.id]
+        );
+        const usageCount = parseInt(usageCountRes.rows[0].count, 10);
+        if (usageCount >= coupon.usage_limit) {
+          const err = new Error('Coupon usage limit reached');
+          err.status = 400;
+          throw err;
+        }
+      }
+
+      if (coupon.per_user_limit) {
+        const userUsageCountRes = await client.query(
+          'SELECT COUNT(*) FROM coupon_usages WHERE coupon_id = $1 AND user_id = $2',
+          [coupon.id, req.user.id]
+        );
+        const userUsageCount = parseInt(userUsageCountRes.rows[0].count, 10);
+        if (userUsageCount >= coupon.per_user_limit) {
+          const err = new Error('You have already used this coupon');
+          err.status = 400;
+          throw err;
+        }
+      }
+
+      if (coupon.type === 'percentage') {
+        discountApplied = subtotal * (Number(coupon.value) / 100);
+        if (coupon.max_discount && discountApplied > Number(coupon.max_discount)) {
+          discountApplied = Number(coupon.max_discount);
+        }
+      } else if (coupon.type === 'fixed') {
+        discountApplied = Number(coupon.value);
+        if (discountApplied > subtotal) {
+          discountApplied = subtotal;
+        }
+      }
+    }
+
+    const subtotalAfterDiscount = Math.max(0, subtotal - discountApplied);
+
     const settingsRes = await client.query('SELECT tax_label, tax_rate_percent, tax_inclusive, invoice_prefix FROM company_settings WHERE id = 1');
     const taxSettings = settingsRes.rows[0] || { tax_label: 'Sales Tax', tax_rate_percent: 0, tax_inclusive: false, invoice_prefix: 'INV' };
     const taxRate = Number(taxSettings.tax_rate_percent || 0);
-    // Tax-inclusive pricing means the displayed price already contains tax,
-    // so we back the tax amount out instead of adding it on top.
+
     const taxAmount = taxSettings.tax_inclusive
-      ? subtotal - subtotal / (1 + taxRate / 100)
-      : (subtotal + shippingFee) * (taxRate / 100);
-    const total = taxSettings.tax_inclusive ? subtotal + shippingFee : subtotal + shippingFee + taxAmount;
+      ? subtotalAfterDiscount - subtotalAfterDiscount / (1 + taxRate / 100)
+      : (subtotalAfterDiscount + shippingFee) * (taxRate / 100);
+    const total = taxSettings.tax_inclusive ? subtotalAfterDiscount + shippingFee : subtotalAfterDiscount + shippingFee + taxAmount;
 
     const orderNumber = generateOrderNumber();
     const invoiceNumber = `${taxSettings.invoice_prefix || 'INV'}-${orderNumber.replace('ORD-', '')}`;
 
     const orderRes = await client.query(
-      `INSERT INTO orders (order_number, user_id, subtotal, shipping_fee, total, shipping_address_id, tax_label, tax_rate_percent, tax_amount, invoice_number, notes, payment_method)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [orderNumber, req.user.id, subtotal, shippingFee, total, addressId, taxSettings.tax_label || 'Sales Tax', taxRate, taxAmount, invoiceNumber, notes || null, method]
+      `INSERT INTO orders (order_number, user_id, subtotal, shipping_fee, total, shipping_address_id, tax_label, tax_rate_percent, tax_amount, invoice_number, notes, payment_method, coupon_code, discount_amount)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+      [orderNumber, req.user.id, subtotal, shippingFee, total, addressId, taxSettings.tax_label || 'Sales Tax', taxRate, taxAmount, invoiceNumber, notes || null, method, coupon ? coupon.code : null, discountApplied]
     );
     const newOrder = orderRes.rows[0];
 
@@ -143,6 +225,15 @@ router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
     }
 
     await client.query('DELETE FROM cart_items WHERE user_id = $1', [req.user.id]);
+
+    // Record Coupon Usage
+    if (coupon) {
+      await client.query(
+        `INSERT INTO coupon_usages (coupon_id, user_id, order_id, discount_applied)
+         VALUES ($1, $2, $3, $4)`,
+        [coupon.id, req.user.id, newOrder.id, discountApplied]
+      );
+    }
 
     await client.query(
       `INSERT INTO shipments (shipment_no, type, order_id, reference, items_count, status)

@@ -201,6 +201,8 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS tax_amount NUMERIC(10,2) NOT NULL DE
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS invoice_number TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT NOT NULL DEFAULT 'cod';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10,2) DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS order_items (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -371,23 +373,6 @@ CREATE TABLE IF NOT EXISTS backup_runs (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Auto-update updated_at trigger helper
-CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DO $$
-DECLARE t TEXT;
-BEGIN
-  FOREACH t IN ARRAY ARRAY['users','products','orders','shipments','tickets','blog_posts','company_settings','site_content'] LOOP
-    EXECUTE format('DROP TRIGGER IF EXISTS trg_set_updated_at ON %I', t);
-    EXECUTE format('CREATE TRIGGER trg_set_updated_at BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION set_updated_at()', t);
-  END LOOP;
-END $$;
-
 -- ---------- PRODUCT IMAGES (binary storage in DB) ----------
 -- Replaces file-system URL storage. Images stored as BYTEA so they
 -- can be served independently of the upload directory.
@@ -411,3 +396,50 @@ CREATE TABLE IF NOT EXISTS site_content_images (
   mime_type   TEXT NOT NULL DEFAULT 'image/jpeg',
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ---------- COUPONS ----------
+CREATE TABLE IF NOT EXISTS coupons (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code             TEXT UNIQUE NOT NULL,
+  type             TEXT NOT NULL CHECK (type IN ('percentage','fixed')),
+  value            NUMERIC(10,2) NOT NULL CHECK (value > 0),
+  min_purchase     NUMERIC(10,2) DEFAULT 0,
+  max_discount     NUMERIC(10,2),
+  start_date       TIMESTAMPTZ,
+  expiry_date      TIMESTAMPTZ,
+  usage_limit      INTEGER,
+  per_user_limit   INTEGER,
+  status           TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','inactive')),
+  description      TEXT,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS coupon_usages (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  coupon_id        UUID NOT NULL REFERENCES coupons(id) ON DELETE CASCADE,
+  user_id          UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  order_id         UUID REFERENCES orders(id) ON DELETE CASCADE,
+  discount_applied NUMERIC(10,2) NOT NULL,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_coupon_usages_coupon ON coupon_usages(coupon_id);
+CREATE INDEX IF NOT EXISTS idx_coupon_usages_user ON coupon_usages(user_id);
+
+-- Auto-update updated_at trigger helper
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$
+DECLARE t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['users','products','orders','shipments','tickets','blog_posts','company_settings','site_content','coupons'] LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS trg_set_updated_at ON %I', t);
+    EXECUTE format('CREATE TRIGGER trg_set_updated_at BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION set_updated_at()', t);
+  END LOOP;
+END $$;
+

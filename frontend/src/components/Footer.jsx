@@ -9,38 +9,37 @@ import logo from "../assests/2 (1).svg";
 
 // Base URL of the footer-frontend (info / policy pages).
 // Set VITE_FOOTER_URL in your .env to point at the deployed footer-frontend.
-const FOOTER = import.meta.env.VITE_FOOTER_URL || "http://localhost:5174";
+const FOOTER = import.meta.env.VITE_FOOTER_URL || "https://footer-frontend.vercel.app";
 
 /** Internal links stay inside this app; external links go to footer-frontend */
 const cols = [
   {
     title: "Shop",
     links: [
-      { label: "Apparel",      to: "/shop?category=men",         external: false },
-      { label: "Home",         to: "/",                          external: false },
-      { label: "Accessories",  to: "/shop",                      external: false },
-      { label: "Wellness",     to: "/shop",                      external: false },
       { label: "Best Sellers", to: "/shop?category=bestsellers", external: false },
+      { label: "Home", to: "/", external: false },
+      { label: "New arrivals", to: "/shop?category=newarrivals", external: false },
     ],
   },
   {
-    title: "Company",
+    title: "The kour",
     links: [
-      { label: "About Us",      to: `${FOOTER}/about`,        external: true },
-      { label: "How We Work",   to: `${FOOTER}/how-we-work`,  external: true },
-      { label: "Sustainability", to: `${FOOTER}/about`,       external: true },
-      { label: "Careers",       to: "/",                      external: false },
-      { label: "Blog",          to: "/blog",                  external: false },
+      { label: "About Us", to: `${FOOTER}/about`, external: true },
+      { label: "How We Work", to: `${FOOTER}/how-we-work`, external: true },
+      { label: "Our Goal", to: `${FOOTER}/our-goal`, external: true },
+      { label: "Blog", to: "/blog", external: false },
+      { label: "Careers", to: `${FOOTER}/careers`, external: true },
+      { label: "Our Promise", to: `${FOOTER}/our-promise`, external: true },
     ],
   },
   {
-    title: "Customer Care",
+    title: "customer care",
     links: [
-      { label: "My Orders",          to: "/profile",                external: false },
-      { label: "Start a Return",     to: "/profile",                external: false },
-      { label: "Shipping & Returns", to: `${FOOTER}/shipping`,      external: true },
-      { label: "FAQ",                to: `${FOOTER}/shipping`,      external: true },
-      { label: "Contact Us",         to: "mailto:support@thekour.com", external: true },
+      { label: "My orders",          to: "/dashboard/orders",       external: false },
+      { label: "Return Policy",      to: `${FOOTER}/returns`,       external: true },
+      { label: "Shipping Policy",    to: `${FOOTER}/shipping`,      external: true },
+      { label: "FAQ",                to: `${FOOTER}/faq`,           external: true },
+      { label: "Contact Us",         to: `${FOOTER}/contact`,       external: true },
     ],
   },
 ];
@@ -50,8 +49,6 @@ function NavLink({ link }) {
     return (
       <a
         href={link.to}
-        target="_blank"
-        rel="noopener noreferrer"
         className="text-zinc-400 hover:text-white transition"
       >
         {link.label}
@@ -135,9 +132,9 @@ export default function Footer() {
             <div className="eyebrow text-zinc-400 mb-4">FOLLOW US</div>
             <div className="flex gap-5">
               <Instagram size={24} className="text-zinc-400 hover:text-white cursor-pointer transition-colors" />
-              <Facebook  size={24} className="text-zinc-400 hover:text-white cursor-pointer transition-colors" />
-              <X         size={24} className="text-zinc-400 hover:text-white cursor-pointer transition-colors" />
-              <Linkedin  size={24} className="text-zinc-400 hover:text-white cursor-pointer transition-colors" />
+              <Facebook size={24} className="text-zinc-400 hover:text-white cursor-pointer transition-colors" />
+              <X size={24} className="text-zinc-400 hover:text-white cursor-pointer transition-colors" />
+              <Linkedin size={24} className="text-zinc-400 hover:text-white cursor-pointer transition-colors" />
             </div>
           </div>
         </div>
@@ -151,11 +148,11 @@ export default function Footer() {
         <span className="text-zinc-500">2025 TheKour.com — All Rights Reserved.</span>
         <span className="text-zinc-500">© Powered by Ameriavis Tech.</span>
         <span className="text-zinc-500 flex gap-3">
-          <a href={`${FOOTER}/about`}         target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Terms &amp; Conditions</a>
+          <a href={`${FOOTER}/about`} className="hover:text-white transition">Terms &amp; Conditions</a>
           <span>·</span>
-          <a href={`${FOOTER}/privacy`}        target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Privacy Policy</a>
+          <a href={`${FOOTER}/privacy`} className="hover:text-white transition">Privacy Policy</a>
           <span>·</span>
-          <a href={`${FOOTER}/accessibility`}  target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Accessibility</a>
+          <a href={`${FOOTER}/accessibility`} className="hover:text-white transition">Accessibility</a>
         </span>
       </div>
     </footer>

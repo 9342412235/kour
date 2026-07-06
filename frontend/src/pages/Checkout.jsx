@@ -4,11 +4,6 @@ import { Plus, MapPin } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import api from '../lib/api'
 
-const PAYMENT_METHODS = [
-  { id: 'cod', label: 'Cash on delivery', desc: 'Pay when your order arrives.' },
-  { id: 'card', label: 'Credit / debit card', desc: 'Pay securely online.' },
-  { id: 'upi', label: 'UPI', desc: 'Pay via any UPI app.' },
-]
 
 const emptyAddressForm = { label: 'Home', line1: '', line2: '', city: '', state: '', postalCode: '', phone: '' }
 
@@ -23,12 +18,46 @@ export default function Checkout() {
   const [addressForm, setAddressForm] = useState(emptyAddressForm)
   const [savingAddress, setSavingAddress] = useState(false)
 
-  const [paymentMethod, setPaymentMethod] = useState('cod')
+
   const [notes, setNotes] = useState('')
   const [tax, setTax] = useState({ label: 'Sales Tax', ratePercent: 0, inclusive: false })
 
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState('')
+
+  // Coupon states
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [couponError, setCouponError] = useState('')
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
+
+  const handleApplyCoupon = async (e) => {
+    e.preventDefault()
+    setCouponError('')
+    if (!couponInput.trim()) return
+    setValidatingCoupon(true)
+    try {
+      const res = await api.post('/coupons/validate', {
+        code: couponInput.trim(),
+        orderAmount: cartTotal
+      })
+      setAppliedCoupon({
+        code: couponInput.trim().toUpperCase(),
+        discount: Number(res.discountAmount)
+      })
+      setCouponInput('')
+    } catch (err) {
+      setCouponError(err.message || 'Invalid coupon code')
+      setAppliedCoupon(null)
+    } finally {
+      setValidatingCoupon(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponError('')
+  }
 
   const loadAddresses = () => {
     setAddressesLoading(true)
@@ -61,10 +90,13 @@ export default function Checkout() {
   }
 
   const shippingFee = 0
+  const discountAmount = appliedCoupon ? appliedCoupon.discount : 0
+  const subtotalAfterDiscount = Math.max(0, cartTotal - discountAmount)
+
   const taxAmount = tax.inclusive
-    ? cartTotal - cartTotal / (1 + tax.ratePercent / 100)
-    : (cartTotal + shippingFee) * (tax.ratePercent / 100)
-  const orderTotal = tax.inclusive ? cartTotal + shippingFee : cartTotal + shippingFee + taxAmount
+    ? subtotalAfterDiscount - subtotalAfterDiscount / (1 + tax.ratePercent / 100)
+    : (subtotalAfterDiscount + shippingFee) * (tax.ratePercent / 100)
+  const orderTotal = tax.inclusive ? subtotalAfterDiscount + shippingFee : subtotalAfterDiscount + shippingFee + taxAmount;
 
   const submitAddress = async (e) => {
     e.preventDefault()
@@ -91,7 +123,12 @@ export default function Checkout() {
     }
     setPlacing(true)
     try {
-      const order = await checkout({ addressId: selectedAddressId, notes, paymentMethod })
+      const order = await checkout({
+        addressId: selectedAddressId,
+        notes,
+        paymentMethod: 'cod',
+        couponCode: appliedCoupon ? appliedCoupon.code : null
+      })
       navigate('/dashboard/orders', { state: { justPlaced: order.orderNumber } })
     } catch (err) {
       setError(err.message || 'Checkout failed')
@@ -177,30 +214,6 @@ export default function Checkout() {
           )}
         </div>
 
-        {/* Payment method */}
-        <div>
-          <p className="eyebrow text-muted mb-4">Payment method</p>
-          <div className="space-y-3">
-            {PAYMENT_METHODS.map((m) => (
-              <label
-                key={m.id}
-                className={`flex items-start gap-3 border px-4 py-3 cursor-pointer ${paymentMethod === m.id ? 'border-ink' : 'border-line'}`}
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  checked={paymentMethod === m.id}
-                  onChange={() => setPaymentMethod(m.id)}
-                  className="mt-1"
-                />
-                <div className="text-sm">
-                  <p className="font-medium">{m.label}</p>
-                  <p className="text-muted text-xs mt-0.5">{m.desc}</p>
-                </div>
-              </label>
-            ))}
-          </div>
-        </div>
 
         {/* Order notes */}
         <div>
@@ -227,9 +240,47 @@ export default function Checkout() {
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-sm mb-2">
+
+          {/* Coupon Code section */}
+          <div className="py-4 border-b border-line space-y-2">
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between text-xs bg-neutral-50 p-2 border border-line">
+                <span className="font-semibold text-neutral-800">Coupon: {appliedCoupon.code}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-700 font-semibold">-${appliedCoupon.discount.toFixed(2)}</span>
+                  <button type="button" onClick={removeCoupon} className="text-neutral-400 hover:text-black">
+                    <Plus size={14} className="rotate-45" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                <input
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  placeholder="Promo code"
+                  className="flex-1 border border-line px-3 py-1.5 text-xs outline-none bg-transparent uppercase"
+                />
+                <button
+                  type="submit"
+                  disabled={validatingCoupon || !couponInput.trim()}
+                  className="border border-ink bg-ink text-bg px-4 py-1.5 text-xs hover:opacity-90 disabled:opacity-50"
+                >
+                  {validatingCoupon ? '...' : 'Apply'}
+                </button>
+              </form>
+            )}
+            {couponError && <p className="text-[11px] text-red-600">{couponError}</p>}
+          </div>
+
+          <div className="flex justify-between text-sm mb-2 mt-4">
             <span>Subtotal</span><span>${cartTotal.toFixed(2)}</span>
           </div>
+          {appliedCoupon && (
+            <div className="flex justify-between text-sm mb-2 text-green-700 font-medium">
+              <span>Discount ({appliedCoupon.code})</span><span>-${appliedCoupon.discount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm mb-2 text-muted">
             <span>Shipping</span><span>Free</span>
           </div>

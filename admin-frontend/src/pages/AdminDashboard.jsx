@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import DashboardShell from '../components/DashboardShell'
 import ProductFormModal from '../components/ProductFormModal'
 import CrmPage from '../components/CrmPage'
+import OffersPage from '../components/OffersPage'
 import TicketThread from '../components/TicketThread'
 import ManagementPage from '../components/ManagementPage'
 import { StatCard, Pill, statusTone } from '../components/ui'
@@ -1002,6 +1003,7 @@ export default function AdminDashboard() {
         <Route path="blog" element={<BlogPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="offers" element={<OffersPage />} />
         <Route path="finance" element={<FinancePage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="tax" element={<TaxSettingsTab />} />

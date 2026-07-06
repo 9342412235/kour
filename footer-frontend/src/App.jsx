@@ -9,6 +9,11 @@ import Privacy from './pages/Privacy'
 import Shipping from './pages/Shipping'
 import Returns from './pages/Returns'
 import Accessibility from './pages/Accessibility'
+import FAQ from './pages/FAQ'
+import Careers from './pages/Careers'
+import OurPromise from './pages/OurPromise'
+import OurGoal from './pages/OurGoal'
+import ContactUs from './pages/ContactUs'
 
 function Layout({ children }) {
   return (
@@ -32,6 +37,14 @@ export default function App() {
         <Route path="/shipping"       element={<Layout><Shipping /></Layout>} />
         <Route path="/returns"        element={<Layout><Returns /></Layout>} />
         <Route path="/accessibility"  element={<Layout><Accessibility /></Layout>} />
+        
+        {/* New Pages */}
+        <Route path="/faq"            element={<Layout><FAQ /></Layout>} />
+        <Route path="/careers"        element={<Layout><Careers /></Layout>} />
+        <Route path="/our-promise"    element={<Layout><OurPromise /></Layout>} />
+        <Route path="/our-goal"       element={<Layout><OurGoal /></Layout>} />
+        <Route path="/contact"        element={<Layout><ContactUs /></Layout>} />
+
         {/* Fallback */}
         <Route path="*"              element={<Navigate to="/about" replace />} />
       </Routes>

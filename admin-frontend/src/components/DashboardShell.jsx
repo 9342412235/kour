@@ -45,6 +45,7 @@ const NAV = {
     { to: "/dashboard/blog", label: "Blog", icon: Newspaper },
     { to: "/dashboard/catalog", label: "Products", icon: Boxes },
     { to: "/dashboard/categories", label: "Categories", icon: Tag },
+    { to: "/dashboard/offers", label: "Offers & Coupons", icon: Tag },
     { to: "/dashboard/finance", label: "Finance & Reports", icon: LineChart },
     { to: "/dashboard/tax", label: "Tax Settings", icon: Receipt },
     { to: "/dashboard/invoice", label: "Invoicing", icon: FileText },
@@ -108,10 +109,9 @@ export default function DashboardShell({ children }) {
   const items = NAV[role] || [];
 
   const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${
-      isActive
-        ? "bg-white text-black font-medium"
-        : "text-white/80 hover:bg-white hover:text-black"
+    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${isActive
+      ? "bg-white text-black font-medium"
+      : "text-white/80 hover:bg-white hover:text-black"
     }`;
 
   const signOut = async () => {

@@ -138,8 +138,8 @@ export function AppProvider({ children }) {
     }
   }
 
-  const checkout = async ({ addressId, notes, paymentMethod } = {}) => {
-    const order = await api.post('/orders/checkout', { addressId, notes, paymentMethod })
+  const checkout = async ({ addressId, notes, paymentMethod, couponCode } = {}) => {
+    const order = await api.post('/orders/checkout', { addressId, notes, paymentMethod, couponCode })
     await refreshCart()
     return order
   }

@@ -101,10 +101,9 @@ export default function DashboardShell({ children }) {
   const items = NAV.customer;
 
   const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${
-      isActive
-        ? "bg-white text-black font-medium"
-        : "text-white/80 hover:bg-white hover:text-black"
+    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${isActive
+      ? "bg-white text-black font-medium"
+      : "text-white/80 hover:bg-white hover:text-black"
     }`;
 
   const signOut = async () => {
@@ -140,21 +139,21 @@ export default function DashboardShell({ children }) {
               {item.label}
             </NavLink>
           ))}
-        </nav>
-        <div className="p-4 border-t border-line space-y-1">
-          <Link
+          <NavLink
             to="/profile"
-            className="flex items-center gap-2 text-sm text-white/80 hover:text-black hover:bg-white p-2 rounded w-full transition-all"
+            className={linkClass}
           >
-            <UserRound size={15} /> Edit profile
-          </Link>
+            <UserRound size={17} />
+            Edit profile
+          </NavLink>
           <button
             onClick={signOut}
-            className="flex items-center gap-2 text-sm text-white/80 hover:text-black hover:bg-white p-2 rounded w-full transition-all"
+            className="flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors text-white/80 hover:bg-white hover:text-black w-full text-left"
           >
-            <LogOut size={15} /> Sign out
+            <LogOut size={17} />
+            Sign out
           </button>
-        </div>
+        </nav>
       </aside>
 
       <div className="flex-1 min-w-0 h-screen flex flex-col overflow-hidden">

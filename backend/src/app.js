@@ -27,6 +27,7 @@ import adminSettingsRoutes from './routes/admin-settings.routes.js';
 import crmRoutes from './routes/crm.routes.js';
 import contentRoutes from './routes/content.routes.js';
 import taxRoutes from './routes/tax.routes.js';
+import couponsRoutes from './routes/coupons.routes.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 
 dotenv.config();
@@ -142,6 +143,7 @@ app.use('/api/admin/management', adminSettingsRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/tax-settings', taxRoutes);
+app.use('/api/coupons', couponsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -386,23 +386,26 @@ function Payments() {
 
 // 7. Offers & Promotional Coupons View
 function Offers() {
-  const coupons = [
-    { code: 'WELCOME10', desc: '10% off your first order', status: 'Available' },
-    { code: 'FREESHIP', desc: 'Free shipping, no minimum', status: 'Available' },
-  ]
+  const [coupons, { loading }] = useApiList('/coupons/active')
   return (
     <div className="text-black">
       <h1 className="font-serif text-3xl tracking-wide mb-1 font-normal text-black">Offers & coupons</h1>
       <p className="text-xs text-neutral-500 tracking-tight mb-8">Available promotions.</p>
 
       <div className="border border-neutral-200 rounded-none divide-y divide-neutral-200 bg-white">
+        {loading && <p className="p-5 text-xs text-neutral-400">Loading…</p>}
+        {!loading && coupons.length === 0 && (
+          <p className="p-5 text-xs text-neutral-400">No offers currently available.</p>
+        )}
         {coupons.map((c) => (
           <div key={c.code} className="flex items-center justify-between p-5 text-xs tracking-tight gap-4">
             <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-black min-w-[120px] shrink-0">
               <Tag size={13} className="text-neutral-400" /> {c.code}
             </span>
-            <span className="text-neutral-500 flex-1 px-2 text-xs truncate">{c.desc}</span>
-            <span className="text-[10px] uppercase tracking-wider border border-black bg-black text-white px-2 py-0.5 font-medium shrink-0">{c.status}</span>
+            <span className="text-neutral-500 flex-1 px-2 text-xs truncate">
+              {c.description || (c.type === 'percentage' ? `${parseFloat(c.value)}% off your order` : `$${parseFloat(c.value).toFixed(2)} off your order`)}
+            </span>
+            <span className="text-[10px] uppercase tracking-wider border border-black bg-black text-white px-2 py-0.5 font-medium shrink-0">Available</span>
           </div>
         ))}
       </div>

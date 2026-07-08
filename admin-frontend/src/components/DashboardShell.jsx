@@ -128,7 +128,7 @@ export default function DashboardShell({ children }) {
         <div className="h-16 flex items-center px-6 border-b border-white/10">
           <span
             className="font-display text-xl tracking-widest text-white cursor-pointer"
-            onClick={() => { window.location.href = 'http://localhost:5173' }}
+            onClick={() => { window.location.href = import.meta.env.VITE_STORE_URL || 'https://thekour-store.vercel.app' }}
           >
             THE KOUR
           </span>

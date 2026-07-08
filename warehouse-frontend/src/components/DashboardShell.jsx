@@ -105,9 +105,10 @@ export default function DashboardShell({ children }) {
   const items = NAV[role] || [];
 
   const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${isActive
-      ? "bg-white text-black font-medium"
-      : "text-white/80 hover:bg-white hover:text-black"
+    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${
+      isActive
+        ? "bg-white text-black font-medium"
+        : "text-white/80 hover:bg-white hover:text-black"
     }`;
 
   const signOut = async () => {

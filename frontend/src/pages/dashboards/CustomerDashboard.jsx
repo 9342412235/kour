@@ -397,7 +397,7 @@ function Offers() {
 
   useEffect(() => {
     fetchCoupons()
-    const id = setInterval(fetchCoupons, 5000) // Poll every 5s to sync changes instantly
+    const id = setInterval(fetchCoupons, 10000)
     return () => clearInterval(id)
   }, [])
 

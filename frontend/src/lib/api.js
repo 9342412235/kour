@@ -4,12 +4,9 @@ async function request(path, options = {}) {
   const isFormData = options.body instanceof FormData;
   const res = await fetch(`${API_URL}/api${path}`, {
     credentials: 'include',
-    cache: 'no-store', // Disable caching globally for all API requests to ensure real-time data
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       'X-App': 'customer',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
       ...(options.headers || {}),
     },
     ...options,

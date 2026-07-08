@@ -117,15 +117,13 @@ export default function DashboardShell({ children }) {
         className="hidden md:flex w-64 flex-col border-r border-line shrink-0 text-white h-screen"
         style={{ backgroundColor: "#2b2b2b" }}
       >
-        <div className="h-16 flex items-center justify-center border-b border-line">
-          <img
-            src="/logo.svg"
-            alt="Logo"
-            className="h-12 w-auto cursor-pointer"
-            onClick={() => {
-              window.location.href = "http://localhost:5173";
-            }}
-          />
+        <div className="h-16 flex items-center px-6 border-b border-white/10">
+          <span
+            className="font-display text-xl tracking-widest text-white cursor-pointer"
+            onClick={() => { window.location.href = 'http://localhost:5173' }}
+          >
+            THE KOUR
+          </span>
         </div>
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
           {items.map((item) => (

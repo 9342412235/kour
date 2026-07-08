@@ -386,11 +386,25 @@ function Payments() {
 
 // 7. Offers & Promotional Coupons View
 function Offers() {
-  const [coupons, { loading }] = useApiList('/coupons/active')
+  const [coupons, setCoupons] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchCoupons = () => {
+    api.get('/coupons/active')
+      .then(data => { setCoupons(data); setLoading(false) })
+      .catch(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchCoupons()
+    const id = setInterval(fetchCoupons, 10000)
+    return () => clearInterval(id)
+  }, [])
+
   return (
     <div className="text-black">
       <h1 className="font-serif text-3xl tracking-wide mb-1 font-normal text-black">Offers & coupons</h1>
-      <p className="text-xs text-neutral-500 tracking-tight mb-8">Available promotions.</p>
+      <p className="text-xs text-neutral-500 tracking-tight mb-8">Available promotions — apply them at checkout.</p>
 
       <div className="border border-neutral-200 rounded-none divide-y divide-neutral-200 bg-white">
         {loading && <p className="p-5 text-xs text-neutral-400">Loading…</p>}
@@ -398,14 +412,23 @@ function Offers() {
           <p className="p-5 text-xs text-neutral-400">No offers currently available.</p>
         )}
         {coupons.map((c) => (
-          <div key={c.code} className="flex items-center justify-between p-5 text-xs tracking-tight gap-4">
-            <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-black min-w-[120px] shrink-0">
+          <div key={c.id} className="flex flex-col md:flex-row md:items-center justify-between p-5 text-xs tracking-tight gap-4">
+            <div className="flex items-center gap-2 font-semibold uppercase tracking-wider text-black min-w-[120px] shrink-0">
               <Tag size={13} className="text-neutral-400" /> {c.code}
-            </span>
-            <span className="text-neutral-500 flex-1 px-2 text-xs truncate">
-              {c.description || (c.type === 'percentage' ? `${parseFloat(c.value)}% off your order` : `$${parseFloat(c.value).toFixed(2)} off your order`)}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider border border-black bg-black text-white px-2 py-0.5 font-medium shrink-0">Available</span>
+            </div>
+            <div className="flex-1 flex flex-col gap-1">
+              <span className="text-neutral-800 font-medium text-xs">
+                {c.description || (c.type === 'percentage' ? `${parseFloat(c.value)}% off your order` : `$${parseFloat(c.value).toFixed(2)} off your order`)}
+              </span>
+              <div className="flex flex-wrap gap-4 text-neutral-500 text-[11px]">
+                <span>Discount: {c.type === 'percentage' ? `${parseFloat(c.value)}%` : `$${parseFloat(c.value).toFixed(2)}`}</span>
+                {parseFloat(c.min_purchase) > 0 && <span>Min. purchase: ${parseFloat(c.min_purchase).toFixed(2)}</span>}
+                {c.expiry_date && <span>Expires: {new Date(c.expiry_date).toLocaleDateString()}</span>}
+              </div>
+            </div>
+            <div className="shrink-0">
+              <Pill tone={c.status === 'active' ? 'success' : 'neutral'}>{c.status}</Pill>
+            </div>
           </div>
         ))}
       </div>
@@ -448,10 +471,91 @@ function Notifications() {
 
 // 9. Personal Reviews Ledger
 function MyReviews() {
+  const [eligible, { loading, reload }] = useApiList('/reviews/my-eligible')
+  
+  // review form state per product
+  const [forms, setForms] = useState({})
+  
+  const handleRating = (productId, rating) => {
+    setForms(prev => ({ ...prev, [productId]: { ...prev[productId], rating } }))
+  }
+  const handleText = (productId, text) => {
+    setForms(prev => ({ ...prev, [productId]: { ...prev[productId], text } }))
+  }
+  const submitReview = async (productId) => {
+    const f = forms[productId]
+    if (!f || !f.rating || !f.text) return alert('Rating and text required')
+    try {
+      await api.post(`/reviews/product/${productId}`, { rating: f.rating, text: f.text })
+      reload()
+    } catch (e) {
+      alert(e.message)
+    }
+  }
+
+  // Pre-fill forms when eligible changes
+  useEffect(() => {
+    const initialForms = {}
+    eligible.forEach(p => {
+      if (p.reviewId) {
+        initialForms[p.productId] = { rating: p.rating, text: p.text }
+      } else {
+        initialForms[p.productId] = { rating: 0, text: '' }
+      }
+    })
+    setForms(initialForms)
+  }, [eligible])
+
   return (
     <div className="text-black">
       <h1 className="font-serif text-3xl tracking-wide mb-1 font-normal text-black">My reviews</h1>
-      <p className="text-xs text-neutral-500 tracking-tight mb-8">Reviews you've left are visible from each product page — leave one from any product you've purchased.</p>
+      <p className="text-xs text-neutral-500 tracking-tight mb-8">Products you've purchased that are eligible for review.</p>
+
+      <div className="space-y-6">
+        {loading && <p className="text-xs text-neutral-400">Loading…</p>}
+        {eligible.map((p) => (
+          <div key={p.productId} className="border border-neutral-200 bg-white p-5 flex flex-col md:flex-row gap-6">
+            <div className="shrink-0 w-24 h-24 bg-neutral-100 border border-neutral-200 flex items-center justify-center overflow-hidden">
+              {p.image ? (
+                <img src={p.image} alt={p.product} className="w-full h-full object-cover" />
+              ) : (
+                <ShoppingBag size={24} className="text-neutral-300" />
+              )}
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-sm text-black mb-2">{p.product}</h3>
+              
+              <div className="flex items-center gap-1 mb-3">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button key={star} onClick={() => handleRating(p.productId, star)}>
+                    <Star size={16} fill={star <= (forms[p.productId]?.rating || 0) ? "var(--ink)" : "none"} className={star <= (forms[p.productId]?.rating || 0) ? "text-ink" : "text-line"} />
+                  </button>
+                ))}
+              </div>
+              
+              <textarea
+                value={forms[p.productId]?.text || ''}
+                onChange={(e) => handleText(p.productId, e.target.value)}
+                placeholder="Write your review here..."
+                rows={3}
+                className="w-full border border-neutral-200 px-3 py-2 text-xs outline-none mb-3 resize-none focus:border-black"
+              />
+              
+              <button 
+                onClick={() => submitReview(p.productId)}
+                className="bg-black text-white px-5 py-2 text-xs uppercase tracking-wider font-medium hover:bg-neutral-800 transition-colors"
+              >
+                {p.reviewId ? 'Update Review' : 'Submit Review'}
+              </button>
+            </div>
+          </div>
+        ))}
+        {!loading && eligible.length === 0 && (
+          <div className="border border-neutral-200 p-12 text-center text-xs text-neutral-400 bg-white">
+            You haven't purchased any eligible products yet.
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -482,6 +586,32 @@ function Security() {
   )
 }
 
+// 11. Account History
+function History() {
+  const [history, { loading }] = useApiList('/users/history')
+  return (
+    <div className="text-black">
+      <h1 className="font-serif text-3xl tracking-wide mb-1 font-normal text-black">Account history</h1>
+      <p className="text-xs text-neutral-500 tracking-tight mb-8">Recent login activities for your account.</p>
+
+      <div className="border border-neutral-200 rounded-none divide-y divide-neutral-100 bg-white">
+        {loading && <p className="p-5 text-xs text-neutral-400">Loading…</p>}
+        {history.map((h) => (
+          <div key={h.id} className="grid grid-cols-4 items-center p-4 text-xs tracking-tight hover:bg-neutral-50/50 transition-colors gap-2">
+            <span className="font-medium text-neutral-800">{new Date(h.createdAt).toLocaleString()}</span>
+            <span className="text-neutral-400 text-[11px] truncate">{h.userAgent || 'Unknown device'}</span>
+            <span className="font-mono text-neutral-500">{h.ipAddress || 'Unknown IP'}</span>
+            <span className="text-right text-[11px] uppercase tracking-wider">
+              <Pill tone={h.status === 'success' ? 'success' : 'critical'}>{h.status}</Pill>
+            </span>
+          </div>
+        ))}
+        {!loading && history.length === 0 && <p className="p-5 text-xs text-neutral-400">No login history found.</p>}
+      </div>
+    </div>
+  )
+}
+
 export default function CustomerDashboard() {
   return (
     <DashboardShell>
@@ -495,6 +625,7 @@ export default function CustomerDashboard() {
         <Route path="offers" element={<Offers />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="reviews" element={<MyReviews />} />
+        <Route path="history" element={<History />} />
         <Route path="security" element={<Security />} />
       </Routes>
     </DashboardShell>

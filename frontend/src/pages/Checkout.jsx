@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Plus, MapPin } from 'lucide-react'
+import { Plus, MapPin, Tag, ChevronDown, ChevronUp } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import api from '../lib/api'
 
@@ -30,6 +30,8 @@ export default function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState(null)
   const [couponError, setCouponError] = useState('')
   const [validatingCoupon, setValidatingCoupon] = useState(false)
+  const [activeCoupons, setActiveCoupons] = useState([])
+  const [showCoupons, setShowCoupons] = useState(false)
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault()
@@ -39,7 +41,7 @@ export default function Checkout() {
     try {
       const res = await api.post('/coupons/validate', {
         code: couponInput.trim(),
-        orderAmount: cartTotal
+        subtotal: cartTotal
       })
       setAppliedCoupon({
         code: couponInput.trim().toUpperCase(),
@@ -76,6 +78,7 @@ export default function Checkout() {
     if (!user) return
     loadAddresses()
     api.get('/orders/tax-rate').then(setTax).catch(() => {})
+    api.get('/coupons/active').then(setActiveCoupons).catch(() => {})
   }, [user])
 
   if (authLoading) return <div className="px-5 py-24 text-center text-sm text-muted">Loading…</div>
@@ -242,7 +245,7 @@ export default function Checkout() {
           </div>
 
           {/* Coupon Code section */}
-          <div className="py-4 border-b border-line space-y-2">
+          <div className="py-4 border-b border-line space-y-3">
             {appliedCoupon ? (
               <div className="flex items-center justify-between text-xs bg-neutral-50 p-2 border border-line">
                 <span className="font-semibold text-neutral-800">Coupon: {appliedCoupon.code}</span>
@@ -271,6 +274,44 @@ export default function Checkout() {
               </form>
             )}
             {couponError && <p className="text-[11px] text-red-600">{couponError}</p>}
+
+            {/* Available coupons list */}
+            {!appliedCoupon && activeCoupons.length > 0 && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowCoupons(s => !s)}
+                  className="flex items-center gap-1 text-[11px] text-muted hover:text-ink transition-colors"
+                >
+                  <Tag size={11} />
+                  {showCoupons ? 'Hide' : 'View'} available coupons ({activeCoupons.length})
+                  {showCoupons ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                </button>
+                {showCoupons && (
+                  <div className="mt-2 space-y-1.5 max-h-36 overflow-y-auto">
+                    {activeCoupons.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { setCouponInput(c.code); setShowCoupons(false) }}
+                        className="w-full flex items-center justify-between text-left border border-dashed border-line p-2 hover:border-ink hover:bg-neutral-50 transition-colors group"
+                      >
+                        <div>
+                          <span className="font-mono text-[11px] font-semibold text-ink group-hover:underline">{c.code}</span>
+                          {(c.description || c.type) && (
+                            <p className="text-[10px] text-muted mt-0.5">
+                              {c.description || (c.type === 'percentage' ? `${parseFloat(c.value)}% off` : `$${parseFloat(c.value).toFixed(2)} off`)}
+                              {parseFloat(c.min_purchase) > 0 && ` · Min $${parseFloat(c.min_purchase).toFixed(2)}`}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-muted shrink-0 ml-2">Click to use</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between text-sm mb-2 mt-4">

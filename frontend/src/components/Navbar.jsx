@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
   Heart,
@@ -7,6 +7,7 @@ import {
   User,
   Menu,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import ThemeToggle from "./ThemeToggle";
@@ -19,6 +20,8 @@ import api from "../lib/api";
 export default function Navbar() {
   const { cartCount, wishlist, role, notificationCount } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHome = location.pathname === '/';
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [mobileSearch, setMobileSearch] = useState("");
@@ -61,13 +64,23 @@ export default function Navbar() {
 
       {/* Desktop Header */}
       <div className="hidden md:flex items-center justify-between px-8 lg:px-14 py-3 border-b-2 border-line">
-        {/* Logo */}
-        <Link to="/" className="flex items-center">
-          <img
-            src={logo}
-            alt="The Kour"
-            className="h-12 w-auto object-contain"
-          />
+        {/* Logo / Brand */}
+        <Link to="/" className="flex items-center gap-3">
+          {!isHome && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); navigate(-1) }}
+              className="flex items-center justify-center w-8 h-8 border border-line rounded-md hover:bg-ink hover:text-bg transition-colors shrink-0"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          )}
+          {isHome ? (
+            <img src={logo} alt="The Kour" className="h-12 w-auto object-contain" />
+          ) : (
+            <span className="font-display text-2xl tracking-widest text-ink">THE KOUR</span>
+          )}
         </Link>
 
         {/* Right Side */}
@@ -169,15 +182,12 @@ export default function Navbar() {
           {open ? <X size={22} strokeWidth={iconStroke} /> : <Menu size={22} strokeWidth={iconStroke} />}
         </button>
 
-        <Link
-          to="/"
-          className="font-display text-xl tracking-tight"
-        >
-          <img
-            src={logo}
-            alt="The Kour"
-            className="h-12 w-auto object-contain"
-          />
+        <Link to="/" className="font-display text-xl tracking-tight flex items-center gap-2">
+          {isHome ? (
+            <img src={logo} alt="The Kour" className="h-12 w-auto object-contain" />
+          ) : (
+            <span className="font-display text-xl tracking-widest text-ink">THE KOUR</span>
+          )}
         </Link>
 
         <Link

@@ -12,6 +12,7 @@ export default function ProductDetail() {
 
   const [product, setProduct] = useState(null)
   const [related, setRelated] = useState([])
+  const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [color, setColor] = useState(null)
   const [size, setSize] = useState('M')
@@ -47,6 +48,9 @@ export default function ProductDetail() {
       .then((p) => {
         setProduct(p)
         setColor(p.colors?.[0] || null)
+        
+        api.get(`/reviews/product/${id}`).then(setReviews).catch(() => {})
+
         if (p.relatedProducts && p.relatedProducts.length > 0) {
           setRelated(p.relatedProducts.slice(0, 4))
           return null
@@ -373,51 +377,89 @@ export default function ProductDetail() {
 
             {/* Expanded Content Sections */}
             <div className="border-t border-line pt-6 space-y-6">
-              <div>
-                <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
-                  Product Details
-                </h3>
-                <p className="text-xs text-muted leading-relaxed mb-3">
-                  Woven from premium long-staple fibers sourced directly from sustainable European mills. This breathable, high-performance garment offers incredible light comfort paired with a structured luxury drape that softens naturally with every wash cycle.
-                </p>
-                <ul className="space-y-2 text-xs text-muted list-disc list-inside pl-0.5">
-                  <li>Soft and highly breathable construction.</li>
-                  <li>Minimalist classic tailoring with fine needle stitching.</li>
-                  <li>Naturally moisture-wicking properties.</li>
-                  <li>SKU: {product.sku || 'N/A-00291'}</li>
-                </ul>
+              {product.productDetails && (
+                <div>
+                  <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
+                    Product Details
+                  </h3>
+                  <div className="text-xs text-muted leading-relaxed whitespace-pre-wrap">
+                    {product.productDetails}
+                  </div>
+                </div>
+              )}
+
+              {product.materialCare && (
+                <div className="border-t border-line pt-5">
+                  <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
+                    Material & Care
+                  </h3>
+                  <div className="text-xs text-muted leading-relaxed whitespace-pre-wrap">
+                    {product.materialCare}
+                  </div>
+                </div>
+              )}
+
+              {product.sizeFitGuide && (
+                <div className="border-t border-line pt-5">
+                  <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
+                    Size & Fit Guide
+                  </h3>
+                  <div className="text-xs text-muted leading-relaxed whitespace-pre-wrap">
+                    {product.sizeFitGuide}
+                  </div>
+                </div>
+              )}
+
+              {product.sustainability && (
+                <div className="border-t border-line pt-5">
+                  <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
+                    Sustainability Focus
+                  </h3>
+                  <div className="text-xs text-muted leading-relaxed whitespace-pre-wrap">
+                    {product.sustainability}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Customer Reviews Section */}
+            <div className="border-t border-line mt-8 pt-8">
+              <h3 className="font-display text-lg font-medium tracking-wide text-ink mb-6">
+                Customer Reviews
+              </h3>
+              
+              <div className="flex items-center gap-4 mb-8">
+                <div className="text-4xl font-display">{Number(product.rating).toFixed(1)}</div>
+                <div>
+                  <div className="flex items-center gap-1 mb-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} size={14} fill={star <= Math.round(product.rating) ? "var(--ink)" : "var(--surface)"} className={star <= Math.round(product.rating) ? "text-ink" : "text-line"} />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted">Based on {product.reviews} reviews</p>
+                </div>
               </div>
 
-              <div className="border-t border-line pt-5">
-                <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
-                  Material & Care
-                </h3>
-                <ul className="space-y-1.5 text-xs text-muted list-none">
-                  <li><strong className="text-ink font-normal">Composition:</strong> 100% Organically Grown European Flax Linen.</li>
-                  <li><strong className="text-ink font-normal">Washing:</strong> Machine wash cold with like colors on a gentle cycle.</li>
-                  <li><strong className="text-ink font-normal">Drying:</strong> Tumble dry low or line dry out of direct sunlight.</li>
-                  <li><strong className="text-ink font-normal">Ironing:</strong> Use medium warm iron with steam while fabric is slightly damp if desired.</li>
-                </ul>
+              <div className="space-y-6">
+                {reviews.length === 0 ? (
+                  <p className="text-sm text-muted">No reviews yet for this product.</p>
+                ) : (
+                  reviews.map((review) => (
+                    <div key={review.id} className="border-b border-line pb-6 last:border-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">{review.author}</span>
+                        <span className="text-xs text-muted">{new Date(review.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} size={12} fill={star <= review.rating ? "var(--ink)" : "none"} className={star <= review.rating ? "text-ink" : "text-line"} />
+                        ))}
+                      </div>
+                      <p className="text-sm text-muted leading-relaxed">{review.text}</p>
+                    </div>
+                  ))
+                )}
               </div>
-
-              <div className="border-t border-line pt-5">
-                <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
-                  Size & Fit Guide
-                </h3>
-                <p className="text-xs text-muted leading-relaxed">
-                  Designed for a relaxed, slightly oversized modern profile. We suggest taking your standard true size for the intended effortless casual styling context, or sizing down one size if you prefer a slim, standard contour alignment.
-                </p>
-              </div>
-
-              <div className="border-t border-line pt-5">
-                <h3 className="font-display text-sm font-medium uppercase tracking-wide text-ink mb-3">
-                  Sustainability Focus
-                </h3>
-                <p className="text-xs text-muted leading-relaxed">
-                  Crafted using 100% certified clean renewable practices. Utilizing up to 85% less fresh water and zero harsh chemical run-offs compared to traditional industrial manufacturing methods, ensuring minimum impact footprint across processing stages.
-                </p>
-              </div>
-
             </div>
           </div>
 

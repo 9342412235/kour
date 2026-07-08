@@ -46,6 +46,10 @@ router.get(
   (req, res) => {
     const token = signToken(req.user);
     res.cookie(APP_COOKIE_NAMES.customer, token, cookieOptions());
+    query(
+      `INSERT INTO login_history (user_id, ip_address, user_agent, status) VALUES ($1, $2, $3, 'success')`,
+      [req.user.id, req.ip, req.get('user-agent')]
+    ).catch(console.error);
     // Redirect to home page so the customer sees the storefront, not their profile editor
     res.redirect(`${process.env.CLIENT_URL}/`);
   }
@@ -100,6 +104,12 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   const token = signToken(user);
   res.cookie(getCookieName(req), token, cookieOptions());
+
+  await query(
+    `INSERT INTO login_history (user_id, ip_address, user_agent, status) VALUES ($1, $2, $3, 'success')`,
+    [user.id, req.ip, req.get('user-agent')]
+  );
+
   res.json(serializeUser(user));
 }));
 

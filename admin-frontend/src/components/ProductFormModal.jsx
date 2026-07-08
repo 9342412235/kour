@@ -9,6 +9,7 @@ const emptyForm = {
   sku: '', name: '', description: '', category: '', subcategory: '',
   price: '', compareAtPrice: '', colors: '', sizes: [], tags: [],
   stock: '', lowStockThreshold: '', warehouse: 'WH-Mumbai', isActive: true,
+  productDetails: '', materialCare: '', sizeFitGuide: '', sustainability: '',
 }
 
 export default function ProductFormModal({ open, product, categories: initialCategories, onClose, onSaved }) {
@@ -44,6 +45,10 @@ export default function ProductFormModal({ open, product, categories: initialCat
         lowStockThreshold: product.lowStockThreshold ?? '',
         warehouse:        product.warehouse || 'WH-Mumbai',
         isActive:         product.isActive ?? true,
+        productDetails:   product.productDetails || '',
+        materialCare:     product.materialCare || '',
+        sizeFitGuide:     product.sizeFitGuide || '',
+        sustainability:   product.sustainability || '',
       })
       // Build existing image list with color metadata from colorImages map
       const colorMap = product.colorImages || {}
@@ -111,6 +116,10 @@ export default function ProductFormModal({ open, product, categories: initialCat
         warehouse:      form.warehouse,
         isActive:       form.isActive,
         lowStockThreshold: form.lowStockThreshold ? Number(form.lowStockThreshold) : 15,
+        productDetails: form.productDetails,
+        materialCare:   form.materialCare,
+        sizeFitGuide:   form.sizeFitGuide,
+        sustainability: form.sustainability,
       }
 
       let saved
@@ -167,6 +176,23 @@ export default function ProductFormModal({ open, product, categories: initialCat
 
           <Field label="Description">
             <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="w-full border border-line px-3 py-2 bg-bg" />
+          </Field>
+
+          <Field label="Product Details">
+            <textarea rows={2} value={form.productDetails} onChange={(e) => setForm({ ...form, productDetails: e.target.value })}
+              className="w-full border border-line px-3 py-2 bg-bg" />
+          </Field>
+          <Field label="Material & Care">
+            <textarea rows={2} value={form.materialCare} onChange={(e) => setForm({ ...form, materialCare: e.target.value })}
+              className="w-full border border-line px-3 py-2 bg-bg" />
+          </Field>
+          <Field label="Size & Fit Guide">
+            <textarea rows={2} value={form.sizeFitGuide} onChange={(e) => setForm({ ...form, sizeFitGuide: e.target.value })}
+              className="w-full border border-line px-3 py-2 bg-bg" />
+          </Field>
+          <Field label="Sustainability Focus">
+            <textarea rows={2} value={form.sustainability} onChange={(e) => setForm({ ...form, sustainability: e.target.value })}
               className="w-full border border-line px-3 py-2 bg-bg" />
           </Field>
 

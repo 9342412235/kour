@@ -45,6 +45,10 @@ function serializeProduct(row, imageRecords = []) {
     reviews:          row.review_count,
     isActive:         row.is_active,
     warehouse:        row.warehouse,
+    productDetails:   row.product_details || '',
+    materialCare:     row.material_care || '',
+    sizeFitGuide:     row.size_fit_guide || '',
+    sustainability:   row.sustainability || '',
   };
 }
 
@@ -205,15 +209,15 @@ export async function listSubcategories(req, res) {
 }
 
 export async function createProduct(req, res) {
-  const { sku, name, description, category, subcategory, price, compareAtPrice, colors, sizes, image, badge, tags, stock, warehouse, relatedProductIds, lowStockThreshold } = req.body;
+  const { sku, name, description, category, subcategory, price, compareAtPrice, colors, sizes, image, badge, tags, stock, warehouse, relatedProductIds, lowStockThreshold, productDetails, materialCare, sizeFitGuide, sustainability } = req.body;
   if (!sku || !name || price == null) return res.status(400).json({ error: 'sku, name and price are required' });
   const cleanRelated = await sanitizeRelatedIds(relatedProductIds, null);
   const cleanTags    = Array.isArray(tags) ? tags.filter(Boolean) : [];
   const resolvedBadge = badge || cleanTags[0] || null;
   const result = await query(
-    `INSERT INTO products (sku, name, description, category_id, subcategory, price, compare_at_price, colors, sizes, image_url, badge, tags, stock, warehouse, related_product_ids, low_stock_threshold)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
-    [sku, name, description || '', category || null, subcategory || null, price, compareAtPrice || null, colors || [], sizes || [], image || null, resolvedBadge, cleanTags, stock || 0, warehouse || 'WH-NewYork', cleanRelated, lowStockThreshold || 15]
+    `INSERT INTO products (sku, name, description, category_id, subcategory, price, compare_at_price, colors, sizes, image_url, badge, tags, stock, warehouse, related_product_ids, low_stock_threshold, product_details, material_care, size_fit_guide, sustainability)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+    [sku, name, description || '', category || null, subcategory || null, price, compareAtPrice || null, colors || [], sizes || [], image || null, resolvedBadge, cleanTags, stock || 0, warehouse || 'WH-NewYork', cleanRelated, lowStockThreshold || 15, productDetails || '', materialCare || '', sizeFitGuide || '', sustainability || '']
   );
   await logAudit(req, { action: 'product.create', entityType: 'product', entityId: result.rows[0].id, details: { sku: result.rows[0].sku, name: result.rows[0].name } });
   res.status(201).json(serializeProduct(result.rows[0], []));
@@ -221,8 +225,8 @@ export async function createProduct(req, res) {
 
 export async function updateProduct(req, res) {
   const { id } = req.params;
-  const allowed = ['name','description','category','subcategory','price','compareAtPrice','colors','sizes','image','badge','tags','stock','isActive','warehouse','lowStockThreshold'];
-  const colMap  = { name:'name', description:'description', category:'category_id', subcategory:'subcategory', price:'price', compareAtPrice:'compare_at_price', colors:'colors', sizes:'sizes', image:'image_url', badge:'badge', tags:'tags', stock:'stock', isActive:'is_active', warehouse:'warehouse', lowStockThreshold:'low_stock_threshold' };
+  const allowed = ['name','description','category','subcategory','price','compareAtPrice','colors','sizes','image','badge','tags','stock','isActive','warehouse','lowStockThreshold','productDetails','materialCare','sizeFitGuide','sustainability'];
+  const colMap  = { name:'name', description:'description', category:'category_id', subcategory:'subcategory', price:'price', compareAtPrice:'compare_at_price', colors:'colors', sizes:'sizes', image:'image_url', badge:'badge', tags:'tags', stock:'stock', isActive:'is_active', warehouse:'warehouse', lowStockThreshold:'low_stock_threshold', productDetails:'product_details', materialCare:'material_care', sizeFitGuide:'size_fit_guide', sustainability:'sustainability' };
   const sets = [], params = [];
   for (const key of allowed) {
     if (req.body[key] !== undefined) {

@@ -138,6 +138,10 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
 ALTER TABLE products ADD COLUMN IF NOT EXISTS related_product_ids UUID[] DEFAULT '{}';
 ALTER TABLE products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS product_details TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS material_care TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS size_fit_guide TEXT DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sustainability TEXT DEFAULT '';
 
 -- ---------- CART ----------
 CREATE TABLE IF NOT EXISTS cart_items (
@@ -433,6 +437,17 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ---------- LOGIN HISTORY ----------
+CREATE TABLE IF NOT EXISTS login_history (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
+  ip_address  TEXT,
+  user_agent  TEXT,
+  status      TEXT NOT NULL DEFAULT 'success' CHECK (status IN ('success','failed')),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id, created_at DESC);
 
 DO $$
 DECLARE t TEXT;

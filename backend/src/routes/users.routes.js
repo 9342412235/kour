@@ -176,4 +176,18 @@ router.post('/me/confirm-password-otp', requireAuth, asyncHandler(async (req, re
   res.json(serializeFullUser(result.rows[0]));
 }));
 
+router.get('/history', requireAuth, asyncHandler(async (req, res) => {
+  const result = await query(
+    `SELECT * FROM login_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+    [req.user.id]
+  );
+  res.json(result.rows.map((row) => ({
+    id: row.id,
+    ipAddress: row.ip_address,
+    userAgent: row.user_agent,
+    status: row.status,
+    createdAt: row.created_at,
+  })));
+}));
+
 export default router;

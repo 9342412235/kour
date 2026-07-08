@@ -105,10 +105,9 @@ export default function DashboardShell({ children }) {
   const items = NAV[role] || [];
 
   const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${
-      isActive
-        ? "bg-white text-black font-medium"
-        : "text-white/80 hover:bg-white hover:text-black"
+    `flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors ${isActive
+      ? "bg-white text-black font-medium"
+      : "text-white/80 hover:bg-white hover:text-black"
     }`;
 
   const signOut = async () => {
@@ -122,13 +121,17 @@ export default function DashboardShell({ children }) {
         className="hidden md:flex w-64 flex-col border-r border-line shrink-0 text-white h-screen"
         style={{ backgroundColor: "#2b2b2b" }}
       >
-        <div className="h-16 flex items-center px-6 border-b border-white/10">
-          <span
-            className="font-display text-xl tracking-widest text-white cursor-pointer"
-            onClick={() => { window.location.href = import.meta.env.VITE_STORE_URL || 'https://thekour-store.vercel.app' }}
-          >
-            THE KOUR
-          </span>
+        <div className="h-16 flex items-center px-6 font-display text-xl border-b border-line text-white">
+          <div className="h-16 flex items-center justify-center border-b border-line">
+            <img
+              src="/logo.svg"
+              alt="Logo"
+              className="h-12 w-auto cursor-pointer"
+              onClick={() => {
+                window.location.href = "http://localhost:5173";
+              }}
+            />
+          </div>
         </div>
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
           {items.map((item) => (
@@ -142,16 +145,21 @@ export default function DashboardShell({ children }) {
               {item.label}
             </NavLink>
           ))}
-          <NavLink to="/profile" className={linkClass}>
-            <UserRound size={17} /> Edit profile
-          </NavLink>
+        </nav>
+        <div className="p-4 border-t border-line space-y-1">
+          <Link
+            to="/profile"
+            className="flex items-center gap-2 text-sm text-white/80 hover:text-black hover:bg-white p-2 rounded w-full transition-all"
+          >
+            <UserRound size={15} /> Edit profile
+          </Link>
           <button
             onClick={signOut}
-            className="flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors text-white/80 hover:bg-white hover:text-black w-full text-left"
+            className="flex items-center gap-2 text-sm text-white/80 hover:text-black hover:bg-white p-2 rounded w-full transition-all"
           >
-            <LogOut size={17} /> Sign out
+            <LogOut size={15} /> Sign out
           </button>
-        </nav>
+        </div>
       </aside>
 
       <div className="flex-1 min-w-0 h-screen flex flex-col overflow-hidden">

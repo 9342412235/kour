@@ -74,11 +74,23 @@ export default function Checkout() {
       .finally(() => setAddressesLoading(false))
   }
 
+  // Load active coupons
+  const fetchActiveCoupons = () => {
+    api.get('/coupons/active')
+      .then(data => {
+        setActiveCoupons(data)
+      })
+      .catch(console.error)
+  }
+
   useEffect(() => {
     if (!user) return
     loadAddresses()
     api.get('/orders/tax-rate').then(setTax).catch(() => {})
-    api.get('/coupons/active').then(setActiveCoupons).catch(() => {})
+    
+    fetchActiveCoupons()
+    const intervalId = setInterval(fetchActiveCoupons, 5000) // Poll every 5s for real-time coupon sync
+    return () => clearInterval(intervalId)
   }, [user])
 
   if (authLoading) return <div className="px-5 py-24 text-center text-sm text-muted">Loading…</div>

@@ -9,6 +9,9 @@ const router = express.Router();
 
 // Get all coupons (Admin only)
 router.get('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   const result = await query('SELECT * FROM coupons ORDER BY created_at DESC');
   res.json(result.rows);
 }));
@@ -140,6 +143,10 @@ router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req
 
 // Get active coupons (For customer dashboard)
 router.get('/active', requireAuth, asyncHandler(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
   const now = new Date();
   const result = await query(
     `SELECT * FROM coupons 
